@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vídeo Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Montserrat:wght@700;800;900&family=Bebas+Neue&family=Anton&family=Archivo+Black&family=Caveat:wght@700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Vídeo <span>Studio</span></h1>
+  <p>Gere vídeos únicos em massa para TikTok e Instagram — texto sobreposto com emoji fiel ao iPhone, áudio original preservado.</p>
+</div>
+
+<div class="layout">
+
+  <!-- COLUNA 1: ENTRADAS -->
+  <div class="col col-inputs">
+
+    <div>
+      <div class="section-label">1 · Vídeos</div>
+      <div class="dropzone" id="dropzone">
+        <strong>Adicionar vídeos</strong>
+        clique ou arraste aqui (você pode selecionar vários)
+      </div>
+      <input type="file" id="fileInput" accept="video/*" multiple>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="hint">Cada vídeo vira <b>1 post</b>. Clique numa miniatura pra escolher qual vídeo você está posicionando a legenda no preview ao lado.</div>
+    </div>
+
+    <div>
+      <div class="section-label">2 · Legenda</div>
+      <div class="toggle-group" id="captionModeToggle">
+        <button data-mode="perLine" class="active" type="button">Uma frase por vídeo</button>
+        <button data-mode="shared" type="button">Mesma p/ todos</button>
+      </div>
+      <div style="margin-top:10px;">
+        <textarea id="phrasesInput" placeholder="Uma frase por linha, uma por vídeo...&#10;Ex:&#10;Bom dia 🔥&#10;Olha só isso aqui 😍"></textarea>
+        <input type="text" id="sharedCaptionInput" placeholder="Essa legenda vai em todos os vídeos... Ex: Bom dia 🔥" style="display:none;">
+      </div>
+      <div class="stat-row">
+        <span><b id="countVideos">0</b> vídeos</span>
+        <span><b id="countPhrases">0</b> frases</span>
+        <span><b id="countPosts">0</b> vídeos prontos</span>
+      </div>
+      <div class="hint" id="captionModeHint">Cada linha vira a legenda de 1 vídeo, na ordem: linha 1 → vídeo 1, linha 2 → vídeo 2...</div>
+    </div>
+
+  </div>
+
+  <!-- COLUNA 2: PREVIEW -->
+  <div class="col col-preview">
+    <div class="section-label" style="align-self:flex-start;">Prévia ao vivo</div>
+    <div>
+      <div class="canvas-shell">
+        <span class="live-dot"><span class="dot"></span>LIVE</span>
+        <canvas id="cv1" width="1080" height="1350"></canvas>
+      </div>
+      <div class="slide-tag">Arraste no vídeo pra mover a legenda — editando: <b id="activeVideoLabel">Vídeo 1</b></div>
+      <div style="display:flex;gap:8px;margin-top:8px;justify-content:center;">
+        <button class="btn btn-ghost btn-sm" id="resetPosBtn" type="button">Redefinir posição</button>
+        <button class="btn btn-ghost btn-sm" id="applyPosAllBtn" type="button">Aplicar a todos</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="generateBtn" style="max-width:340px;">Gerar 0 vídeos</button>
+    <div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div id="resultsEmpty" class="empty-hint">Seus vídeos gerados vão aparecer aqui, prontos pra baixar.</div>
+    <div class="results" id="results"></div>
+    <div class="footer-actions" id="footerActions" style="display:none;">
+      <button class="btn btn-ghost" id="downloadAllBtn" style="flex:1;">Baixar tudo (.zip)</button>
+    </div>
+  </div>
+
+  <!-- COLUNA 3: AJUSTES DE TEMPLATE -->
+  <div class="col col-settings">
+    <div class="section-label">3 · Ajustes do template</div>
+
+    <div class="card" style="display:flex;flex-direction:column;gap:16px;">
+
+      <details open>
+        <summary>Formato &amp; estilo</summary>
+        <div class="field">
+          <label>Formato</label>
+          <select id="formatSelect">
+            <option value="1080x1920">1080×1920 (Reels/TikTok 9:16)</option>
+            <option value="1080x1350">1080×1350 (Instagram 4:5)</option>
+            <option value="1080x1080">1080×1080 (Quadrado)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fonte</label>
+          <select id="fontSelect">
+            <option value="Inter">Inter (Padrão)</option>
+            <option value="Poppins">Poppins (Moderna)</option>
+            <option value="Montserrat">Montserrat (Neue)</option>
+            <option value="'Bebas Neue'">Bebas Neue (Forte)</option>
+            <option value="Anton">Anton (Impacto)</option>
+            <option value="'Archivo Black'">Archivo Black</option>
+            <option value="Caveat">Caveat (Manuscrita)</option>
+            <option value="'Permanent Marker'">Permanent Marker</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Impact">Impact</option>
+            <option value="Arial">Arial</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Overlay escuro <span class="val" id="overlayVal">30%</span></label>
+          <input type="range" id="overlayRange" min="0" max="80" value="30">
+        </div>
+        <div class="switch-row">
+          Sombra no texto
+          <label class="switch"><input type="checkbox" id="shadowToggle" checked><span class="slider"></span></label>
+        </div>
+        <div class="switch-row">
+          Caixa de fundo atrás do texto
+          <label class="switch"><input type="checkbox" id="boxToggle"><span class="slider"></span></label>
+        </div>
+        <div class="field">
+          <label>Opacidade da caixa <span class="val" id="boxOpacityVal">88%</span></label>
+          <input type="range" id="boxOpacityRange" min="40" max="100" value="88">
+        </div>
+        <div class="field">
+          <label>Estilo da caixa</label>
+          <div class="toggle-group" id="boxStyleToggle">
+            <button data-style="block" class="active" type="button">Bloco único</button>
+            <button data-style="perLine" type="button">Por linha (IG)</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Cor da caixa</label>
+          <div class="swatches" id="boxColorSwatches">
+            <button class="swatch active" style="background:#000000" data-c="#000000"></button>
+            <button class="swatch" style="background:#FFFFFF;box-shadow:inset 0 0 0 1px #444" data-c="#FFFFFF"></button>
+            <button class="swatch" style="background:#FF3D77" data-c="#FF3D77"></button>
+            <input type="color" class="color-custom" id="boxColorCustom" value="#000000">
+          </div>
+        </div>
+      </details>
+
+      <details open>
+        <summary>Áudio</summary>
+        <div class="toggle-group" id="audioModeToggle">
+          <button data-mode="original" class="active" type="button">Original</button>
+          <button data-mode="custom" type="button">Personalizado</button>
+          <button data-mode="mute" type="button">Sem áudio</button>
+        </div>
+
+        <div id="customAudioField" style="display:none;margin-top:12px;">
+          <div class="dropzone" id="audioDropzone" style="padding:14px;">
+            <strong id="audioFileName">Adicionar áudio</strong>
+            clique pra escolher um MP3/WAV/M4A
+          </div>
+          <input type="file" id="audioFileInput" accept="audio/*">
+        </div>
+
+        <div class="field" style="margin-top:14px;">
+          <label>Volume <span class="val" id="audioVolumeVal">100%</span></label>
+          <input type="range" id="audioVolumeRange" min="0" max="150" value="100">
+        </div>
+
+        <div class="hint" id="audioHint" style="margin-top:0;">O áudio original de cada vídeo é mantido na gravação.</div>
+      </details>
+
+      <details>
+        <summary>Texto</summary>
+        <div id="textSettings1"></div>
+      </details>
+
+      <details>
+        <summary>Sobre a geração</summary>
+        <div class="hint" style="margin-top:0;">
+          A gravação é feita em tempo real, reproduzindo cada vídeo por trás do overlay — então gerar 10 vídeos de 15s leva ~15s × 10, direto no seu navegador, sem enviar nada pra nenhum servidor. O arquivo final sai em <b>.webm</b> (rápido, sem etapa de conversão). Tamanho, cor e alinhamento do texto valem pra todos os vídeos; a <b>posição</b> (X/Y) pode ser ajustada individualmente por vídeo, arrastando no preview. O áudio (original, personalizado ou mudo) e o volume valem pra todos os vídeos da leva.
+        </div>
+      </details>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
